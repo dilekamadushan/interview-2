@@ -75,8 +75,11 @@ const resolvers = {
       });
     }
   },
-  Mutation: {}
-};
+  Mutation: {
+    createTicket: async (root, { title, isCompleted = false }) => {
+      return models.Ticket.create({ title, isCompleted });
+    }
+  };
 
 const server = new ApolloServer({
   typeDefs,
