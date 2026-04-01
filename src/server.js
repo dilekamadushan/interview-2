@@ -49,6 +49,17 @@ const typeDefs = gql`
  * TODO: Your resolvers below will need to implement the typedefs given above.
  */
 
+/**
+ * Returns true if `ancestorId` is an ancestor of `ticketId` (or if they're equal).
+ * Used to prevent circular parent-child relationships.
+ */
+async function isAncestor(ancestorId, ticketId) {
+  if (String(ancestorId) === String(ticketId)) return true;
+  const ticket = await models.Ticket.findByPk(ticketId);
+  if (!ticket || ticket.parentId == null) return false;
+  return isAncestor(ancestorId, ticket.parentId);
+}
+
 const resolvers = {
   Query: {
     /**
@@ -102,6 +113,18 @@ const resolvers = {
     addChildrenToTicket: async (root, { parentId, childrenIds }) => {
       const parent = await models.Ticket.findByPk(parentId);
       if (!parent) throw new Error(`Ticket with id ${parentId} not found`);
+
+      const children = await models.Ticket.findAll({ where: { id: childrenIds } });
+      if (children.length !== childrenIds.length) {
+        throw new Error("One or more child ticket IDs not found");
+      }
+
+      for (const childId of childrenIds) {
+        if (await isAncestor(childId, parentId)) {
+          throw new Error(`Setting ticket ${childId} as child of ${parentId} would create a circular reference`);
+        }
+      }
+
       await models.Ticket.update(
         { parentId },
         { where: { id: childrenIds } }
@@ -114,6 +137,11 @@ const resolvers = {
       if (!child) throw new Error(`Ticket with id ${childId} not found`);
       const parent = await models.Ticket.findByPk(parentId);
       if (!parent) throw new Error(`Ticket with id ${parentId} not found`);
+
+      if (await isAncestor(childId, parentId)) {
+        throw new Error(`Setting ticket ${parentId} as parent of ${childId} would create a circular reference`);
+      }
+
       await child.update({ parentId });
       return child;
     },
