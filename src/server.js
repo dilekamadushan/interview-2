@@ -97,6 +97,25 @@ const resolvers = {
       if (!ticket) throw new Error(`Ticket with id ${id} not found`);
       await ticket.destroy();
       return true;
+    },
+
+    addChildrenToTicket: async (root, { parentId, childrenIds }) => {
+      const parent = await models.Ticket.findByPk(parentId);
+      if (!parent) throw new Error(`Ticket with id ${parentId} not found`);
+      await models.Ticket.update(
+        { parentId },
+        { where: { id: childrenIds } }
+      );
+      return parent;
+    },
+
+    setParentOfTicket: async (root, { parentId, childId }) => {
+      const child = await models.Ticket.findByPk(childId);
+      if (!child) throw new Error(`Ticket with id ${childId} not found`);
+      const parent = await models.Ticket.findByPk(parentId);
+      if (!parent) throw new Error(`Ticket with id ${parentId} not found`);
+      await child.update({ parentId });
+      return child;
     }
   };
 
