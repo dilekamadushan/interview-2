@@ -78,6 +78,18 @@ const resolvers = {
   Mutation: {
     createTicket: async (root, { title, isCompleted = false }) => {
       return models.Ticket.create({ title, isCompleted });
+    },
+
+    updateTicket: async (root, { id, title }) => {
+      const ticket = await models.Ticket.findByPk(id);
+      if (!ticket) throw new Error(`Ticket with id ${id} not found`);
+      return ticket.update({ title });
+    },
+
+    toggleTicket: async (root, { id, isCompleted }) => {
+      const ticket = await models.Ticket.findByPk(id);
+      if (!ticket) throw new Error(`Ticket with id ${id} not found`);
+      return ticket.update({ isCompleted });
     }
   };
 
