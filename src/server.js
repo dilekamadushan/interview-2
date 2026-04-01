@@ -90,6 +90,13 @@ const resolvers = {
       const ticket = await models.Ticket.findByPk(id);
       if (!ticket) throw new Error(`Ticket with id ${id} not found`);
       return ticket.update({ isCompleted });
+    },
+
+    removeTicket: async (root, { id }) => {
+      const ticket = await models.Ticket.findByPk(id);
+      if (!ticket) throw new Error(`Ticket with id ${id} not found`);
+      await ticket.destroy();
+      return true;
     }
   };
 
