@@ -60,9 +60,21 @@ const resolvers = {
           parentId: null
         }
       });
+    },
+
+    ticket: async (root, { id }) => {
+      const ticket = await models.Ticket.findByPk(id);
+      if (!ticket) throw new Error(`Ticket with id ${id} not found`);
+      return ticket;
     }
   },
-  Ticket: {},
+  Ticket: {
+    children: async (ticket) => {
+      return models.Ticket.findAll({
+        where: { parentId: ticket.id }
+      });
+    }
+  },
   Mutation: {}
 };
 
