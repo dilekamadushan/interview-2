@@ -116,8 +116,15 @@ const resolvers = {
       if (!parent) throw new Error(`Ticket with id ${parentId} not found`);
       await child.update({ parentId });
       return child;
+    },
+
+    removeParentFromTicket: async (root, { id }) => {
+      const ticket = await models.Ticket.findByPk(id);
+      if (!ticket) throw new Error(`Ticket with id ${id} not found`);
+      return ticket.update({ parentId: null });
     }
-  };
+  }
+};
 
 const server = new ApolloServer({
   typeDefs,
